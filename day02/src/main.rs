@@ -12,7 +12,6 @@ fn part1(input: &str) -> u32 {
     let green = 13;
     let blue = 14;
 
-
     input.lines().filter_map(|line| {
         let temp: Vec<&str> = line.split(":").collect();
         let id: u32 = temp[0].split(" ").collect::<Vec<&str>>()[1].parse().unwrap();
@@ -20,32 +19,15 @@ fn part1(input: &str) -> u32 {
         
         temp[1].split(&[';', ','][..]).fold(Some(id), |_result, group| {
                 match group[1..].split_once(" ").unwrap() {
-                    (n, "red") => {
-                        if n.parse::<u32>().unwrap() > red {
-                            is_valid = false
-                        }
-                    },
-                    (n, "green") => {
-                        if n.parse::<u32>().unwrap() > green {
-                            is_valid = false
-                        }
-                    },
-                    (n, "blue") => {
-                        if n.parse::<u32>().unwrap() > blue {
-                            is_valid = false
-                        } 
-                    },
-                    _ => (),
+                    (n, "red") => (n.parse::<u32>().unwrap() > red).then(|| is_valid = false),
+                    (n, "green") => (n.parse::<u32>().unwrap() > green).then(|| is_valid = false),
+                    (n, "blue") => (n.parse::<u32>().unwrap() > blue).then(|| is_valid = false),
+                    _ => None,
                 };
 
-                if is_valid {
-                    return Some(id)
-                }
-                return None
+                is_valid.then_some(id)
             })
     }).sum()
-
-
 }
 
 fn part2(input: &str) -> u32 {
@@ -56,6 +38,7 @@ fn part2(input: &str) -> u32 {
         let mut blue = 0;
 
         let (_id_str, game_str) = line.split_once(":").unwrap();
+
         game_str.split(&[';', ','][..]).for_each(|group| {
             match group[1..].split_once(" ").unwrap() {
                 (n, "red") => red = cmp::max(red, n.parse().unwrap()),
