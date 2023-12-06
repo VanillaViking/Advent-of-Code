@@ -9,11 +9,7 @@ fn main() {
 
     println!("{}", cards.iter().map(|card| card.get_worth()).sum::<i32>());
 
-    let total: usize = cards.iter().enumerate().map(|(idx, _card)| {
-        let a = get_cards_won(&cards, idx);
-        dbg!(a);
-        a
-    }).sum();
+    let total: usize = cards.iter().enumerate().map(|(idx, _card)| get_cards_won(&cards, idx)).sum();
 
     println!("{}", total + cards_len);
 }
@@ -49,8 +45,6 @@ impl Card {
 
         let mut power = i32::try_from(temp).unwrap() - 1;
 
-
-        dbg!(&power);
         if power >= 0 {
             return i32::pow(2, u32::try_from(power).unwrap_or(0))
         } else {
