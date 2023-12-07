@@ -59,48 +59,6 @@ impl Mappings {
         return source
     }
 
-    fn get_dest_ranges_old(&self, source_ranges: &[Range]) -> Vec<Range> {
-        source_ranges.iter().map(|src_range| {
-            let mut range_points: Vec<u64> = self.ranges.iter().filter_map(|range| {
-                let mut range_point_vec: Vec<u64> = Vec::new();
-
-                if range.start >= src_range.start && range.start <= src_range.end {
-                    range_point_vec.push(range.start);
-                }
-                if range.end >= src_range.start && range.end <= src_range.end {
-                    range_point_vec.push(range.end);
-                }
-                if range_point_vec.is_empty() {
-                    return None
-                }
-                Some(range_point_vec)
-            }).flatten().collect();
-            range_points.insert(0, src_range.start);
-            range_points.push(src_range.end);
-            
-            let mut dest_ranges: Vec<Range> = Vec::new();
-
-            if range_points.len() == 2 {
-                dest_ranges.push(Range {start: self.get_dest(range_points[0]), end: self.get_dest(range_points[1].to_owned())})
-            } else {
-                for (idx, range_point) in range_points.iter().enumerate() {
-                    if idx == 0 {
-                        continue;
-                    }
-
-                    let start = self.get_dest(range_points[idx -1]);
-
-                    dest_ranges.push(Range {start, end: self.get_dest(range_point.to_owned())})
-                }
-            }
-            
-
-            dest_ranges
-
-        }).flatten().collect()
-    }
-
-
     fn get_dest_ranges(&self, source_ranges: &[Range]) -> Vec<Range> {
         source_ranges.iter().map(|src_range| {
             let mut subranges: Vec<Range> = self.ranges.iter().filter_map(|range| {
