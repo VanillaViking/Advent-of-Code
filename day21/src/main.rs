@@ -87,6 +87,6 @@ fn part1(map: &Map, steps: u32) -> usize {
         return false
     }).collect();
 
-    dbg!(temp).len()
+    temp.len()
 
 }
