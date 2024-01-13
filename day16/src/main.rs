@@ -1,4 +1,7 @@
-use std::{fs, collections::{VecDeque, HashSet}};
+use std::{
+    collections::{HashSet, VecDeque},
+    fs,
+};
 
 #[derive(Debug, Clone)]
 enum Lean {
@@ -16,10 +19,26 @@ enum Direction {
 impl Direction {
     fn get_next(&self, current: &Coordinate) -> Option<Coordinate> {
         match self {
-            Direction::Up => Some(Coordinate { x: current.x, y: current.y.checked_sub(1)?, direction: current.direction.to_owned() }),
-            Direction::Down => Some(Coordinate { x: current.x, y: current.y + 1, direction: current.direction.to_owned() }),
-            Direction::Left => Some(Coordinate { x: current.x.checked_sub(1)?, y: current.y, direction: current.direction.to_owned() }),
-            Direction::Right => Some(Coordinate { x: current.x + 1, y: current.y, direction: current.direction.to_owned() }),
+            Direction::Up => Some(Coordinate {
+                x: current.x,
+                y: current.y.checked_sub(1)?,
+                direction: current.direction.to_owned(),
+            }),
+            Direction::Down => Some(Coordinate {
+                x: current.x,
+                y: current.y + 1,
+                direction: current.direction.to_owned(),
+            }),
+            Direction::Left => Some(Coordinate {
+                x: current.x.checked_sub(1)?,
+                y: current.y,
+                direction: current.direction.to_owned(),
+            }),
+            Direction::Right => Some(Coordinate {
+                x: current.x + 1,
+                y: current.y,
+                direction: current.direction.to_owned(),
+            }),
         }
     }
 }
@@ -27,21 +46,21 @@ impl Direction {
 #[derive(Debug, Clone)]
 enum SplitterOrientation {
     Vertical,
-    Horizontal
+    Horizontal,
 }
 
 #[derive(Debug, Clone)]
 enum TileType {
     Empty,
     Mirror(Lean),
-    Splitter(SplitterOrientation)
+    Splitter(SplitterOrientation),
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 struct Coordinate {
     x: usize,
     y: usize,
-    direction: Direction
+    direction: Direction,
 }
 
 #[derive(Debug, Clone)]
@@ -56,44 +75,84 @@ impl Tile {
         let mut next_tiles = Vec::new();
 
         match (self.tile_type.to_owned(), current.direction.to_owned()) {
-
-            (TileType::Mirror(Lean::Back), Direction::Up) | (TileType::Mirror(Lean::Forward), Direction::Down) => {
+            (TileType::Mirror(Lean::Back), Direction::Up)
+            | (TileType::Mirror(Lean::Forward), Direction::Down) => {
                 if let Some(x) = current.x.checked_sub(1) {
-                    next_tiles.push(Coordinate { x, y: current.y, direction: Direction::Left})
+                    next_tiles.push(Coordinate {
+                        x,
+                        y: current.y,
+                        direction: Direction::Left,
+                    })
                 }
-            },
+            }
 
-            (TileType::Mirror(Lean::Back), Direction::Down) | (TileType::Mirror(Lean::Forward), Direction::Up) => next_tiles.push(Coordinate { x: current.x +1, y: current.y, direction: Direction::Right}),
+            (TileType::Mirror(Lean::Back), Direction::Down)
+            | (TileType::Mirror(Lean::Forward), Direction::Up) => next_tiles.push(Coordinate {
+                x: current.x + 1,
+                y: current.y,
+                direction: Direction::Right,
+            }),
 
-            (TileType::Mirror(Lean::Back), Direction::Left) | (TileType::Mirror(Lean::Forward), Direction::Right) => {
+            (TileType::Mirror(Lean::Back), Direction::Left)
+            | (TileType::Mirror(Lean::Forward), Direction::Right) => {
                 if let Some(y) = current.y.checked_sub(1) {
-                    next_tiles.push(Coordinate { x: current.x, y, direction: Direction::Up})
+                    next_tiles.push(Coordinate {
+                        x: current.x,
+                        y,
+                        direction: Direction::Up,
+                    })
                 }
-            },
+            }
 
-            (TileType::Mirror(Lean::Back), Direction::Right) => next_tiles.push(Coordinate { x: current.x, y: current.y + 1, direction: Direction::Down}),
-            (TileType::Mirror(Lean::Forward), Direction::Left) => next_tiles.push(Coordinate { x: current.x, y: current.y + 1, direction: Direction::Down}),
+            (TileType::Mirror(Lean::Back), Direction::Right) => next_tiles.push(Coordinate {
+                x: current.x,
+                y: current.y + 1,
+                direction: Direction::Down,
+            }),
+            (TileType::Mirror(Lean::Forward), Direction::Left) => next_tiles.push(Coordinate {
+                x: current.x,
+                y: current.y + 1,
+                direction: Direction::Down,
+            }),
 
-            (TileType::Splitter(SplitterOrientation::Vertical), Direction::Left) | (TileType::Splitter(SplitterOrientation::Vertical), Direction::Right) => {
+            (TileType::Splitter(SplitterOrientation::Vertical), Direction::Left)
+            | (TileType::Splitter(SplitterOrientation::Vertical), Direction::Right) => {
                 if let Some(y) = current.y.checked_sub(1) {
-                    next_tiles.push(Coordinate { x: current.x, y, direction: Direction::Up });
+                    next_tiles.push(Coordinate {
+                        x: current.x,
+                        y,
+                        direction: Direction::Up,
+                    });
                 }
-                next_tiles.push(Coordinate { x: current.x, y: current.y +1, direction: Direction::Down });
-            },
+                next_tiles.push(Coordinate {
+                    x: current.x,
+                    y: current.y + 1,
+                    direction: Direction::Down,
+                });
+            }
 
-            (TileType::Splitter(SplitterOrientation::Horizontal), Direction::Up) | (TileType::Splitter(SplitterOrientation::Horizontal), Direction::Down) => {
+            (TileType::Splitter(SplitterOrientation::Horizontal), Direction::Up)
+            | (TileType::Splitter(SplitterOrientation::Horizontal), Direction::Down) => {
                 if let Some(x) = current.x.checked_sub(1) {
-                    next_tiles.push(Coordinate { x, y: current.y, direction: Direction::Left });
+                    next_tiles.push(Coordinate {
+                        x,
+                        y: current.y,
+                        direction: Direction::Left,
+                    });
                 }
-                next_tiles.push(Coordinate { x: current.x +1, y: current.y, direction: Direction::Right });
+                next_tiles.push(Coordinate {
+                    x: current.x + 1,
+                    y: current.y,
+                    direction: Direction::Right,
+                });
             }
 
             _ => {
                 if let Some(coord) = current.direction.get_next(current) {
                     next_tiles.push(coord);
                 }
-            },
-        } 
+            }
+        }
         next_tiles.into_iter()
     }
 
@@ -104,23 +163,44 @@ impl Tile {
 
 #[derive(Debug)]
 struct Contraption {
-    grid: Vec<Vec<Tile>>
+    grid: Vec<Vec<Tile>>,
 }
 
 impl Contraption {
     fn build(input: &str) -> Contraption {
-        let grid = input.lines()
+        let grid = input
+            .lines()
             .map(|line| {
-                line.chars().map(|ch| {
-                    match ch {
-                        '.' => Tile { tile_type: TileType::Empty, energy: 0, symbol: '.'},
-                        '/' => Tile { tile_type: TileType::Mirror(Lean::Forward), energy: 0, symbol: '/' },
-                        '\\' => Tile { tile_type: TileType::Mirror(Lean::Back), energy: 0, symbol: '\\' },
-                        '|' => Tile { tile_type: TileType::Splitter(SplitterOrientation::Vertical), energy: 0, symbol: '|' },
-                        '-' => Tile { tile_type: TileType::Splitter(SplitterOrientation::Horizontal), energy: 0, symbol: '-' },
-                        _ => panic!()
-                    }
-                }).collect()
+                line.chars()
+                    .map(|ch| match ch {
+                        '.' => Tile {
+                            tile_type: TileType::Empty,
+                            energy: 0,
+                            symbol: '.',
+                        },
+                        '/' => Tile {
+                            tile_type: TileType::Mirror(Lean::Forward),
+                            energy: 0,
+                            symbol: '/',
+                        },
+                        '\\' => Tile {
+                            tile_type: TileType::Mirror(Lean::Back),
+                            energy: 0,
+                            symbol: '\\',
+                        },
+                        '|' => Tile {
+                            tile_type: TileType::Splitter(SplitterOrientation::Vertical),
+                            energy: 0,
+                            symbol: '|',
+                        },
+                        '-' => Tile {
+                            tile_type: TileType::Splitter(SplitterOrientation::Horizontal),
+                            energy: 0,
+                            symbol: '-',
+                        },
+                        _ => panic!(),
+                    })
+                    .collect()
             })
             .collect();
 
@@ -148,11 +228,11 @@ impl Contraption {
         self.grid.get_mut(coord.y)?.get_mut(coord.x)
     }
 
-    fn calculate_energies(&mut self) {
+    fn calculate_energies(&mut self, start: Coordinate) {
         let mut queue = VecDeque::new();
         let mut seen = HashSet::new();
-        
-        queue.push_back(Coordinate {x: 0, y: 0, direction: Direction::Right});
+
+        queue.push_back(start);
 
         while !queue.is_empty() {
             let current = queue.pop_front().unwrap();
@@ -167,29 +247,89 @@ impl Contraption {
 
             let tile = self.get_mut(&current).unwrap();
             tile.inc_energy();
-            tile.get_next_tiles(&current).for_each(|coord| {
-                queue.push_back(coord)
-            });
-
+            tile.get_next_tiles(&current)
+                .for_each(|coord| queue.push_back(coord));
         }
     }
 
     fn get_energized(&self) -> u32 {
-        self.grid.iter().map(|row| {
-            row.iter().filter_map(|tile| (tile.energy > 0).then_some(1)).sum::<u32>()
-        }).sum()
+        self.grid
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .filter_map(|tile| (tile.energy > 0).then_some(1))
+                    .sum::<u32>()
+            })
+            .sum()
+    }
+
+    fn find_best_start(&mut self) -> u32 {
+        let mut energized_list = Vec::new();
+        // top edge
+        for x in 0..self.grid[0].len() {
+            self.calculate_energies(Coordinate {
+                x,
+                y: 0,
+                direction: Direction::Down,
+            });
+            energized_list.push(dbg!(self.get_energized()));
+            self.reset();
+        }
+
+        // right edge
+        for y in 0..self.grid.len() {
+            self.calculate_energies(Coordinate {
+                x: self.grid[0].len() - 1,
+                y,
+                direction: Direction::Left,
+            });
+            energized_list.push(dbg!(self.get_energized()));
+            self.reset();
+        }
+
+        // bottom edge
+        for x in 0..self.grid.len() {
+            self.calculate_energies(Coordinate {
+                x,
+                y: self.grid.len() - 1,
+                direction: Direction::Up,
+            });
+            energized_list.push(dbg!(self.get_energized()));
+            self.reset();
+        }
+
+        // left edge
+        for y in 0..self.grid.len() {
+            self.calculate_energies(Coordinate {
+                x: self.grid[0].len() - 1,
+                y,
+                direction: Direction::Right,
+            });
+            energized_list.push(dbg!(self.get_energized()));
+            self.reset();
+        }
+
+        energized_list.iter().max().unwrap().to_owned()
+    }
+
+    fn reset(&mut self) {
+        self.grid
+            .iter_mut()
+            .for_each(|row| row.iter_mut().for_each(|tile| (*tile).energy = 0))
     }
 }
-
 
 fn main() {
     let input = fs::read_to_string("input").unwrap();
 
     let mut contraption = Contraption::build(&input);
 
-    contraption.calculate_energies();
+    contraption.calculate_energies(Coordinate {
+        x: 0,
+        y: 0,
+        direction: Direction::Right,
+    });
+    contraption.reset();
 
-    contraption.draw();
-
-    println!("{}", contraption.get_energized());
+    println!("{}", contraption.find_best_start());
 }
