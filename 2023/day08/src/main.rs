@@ -69,17 +69,58 @@ fn part1(game: &Game) -> u32 {
     }
     return steps
 }
+    
+#[derive(Debug, Clone)]
+enum Rep {
+    None,
+    Running(u32),
+    Done(u32),
+}
 
 fn part2(game: &mut Game) -> u64 {
     let mut steps: u64 = 0;
     let mut done = false;
+    
+    let mut repeating: Vec<Rep> = vec![Rep::None; game.part2_nodes.len()];
 
     while done == false {
 
         for char in game.directions.chars() {
             match char { 
-                'R' => game.part2_nodes.iter_mut().for_each(|node| *node = game.network.get(&node.right).unwrap().clone()),
-                'L' => game.part2_nodes.iter_mut().for_each(|node| *node = game.network.get(&node.left).unwrap().clone()),
+                'R' => game.part2_nodes.iter_mut().enumerate().for_each(|(idx, node)| { 
+                    let right = game.network.get(&node.right).unwrap();
+                    if right.label.ends_with("Z") {
+                       match repeating[idx] {
+                        Rep::None => repeating[idx] = Rep::Running(0),
+                        Rep::Running(s) => repeating[idx] = Rep::Done(s+1),
+                        Rep::Done(_) => (),
+                       };
+                    } else {
+                       match repeating[idx] {
+                        Rep::None => (),
+                        Rep::Running(s) => repeating[idx] = Rep::Running(s+1),
+                        Rep::Done(_) => (),
+                    };
+                    }
+                    *node = right.clone();
+                }),
+                'L' => game.part2_nodes.iter_mut().enumerate().for_each(|(idx, node)| { 
+                    let left = game.network.get(&node.left).unwrap();
+                    if left.label.ends_with("Z") {
+                       match repeating[idx] {
+                        Rep::None => repeating[idx] = Rep::Running(0),
+                        Rep::Running(s) => repeating[idx] = Rep::Done(s+1),
+                        Rep::Done(_) => (),
+                       };
+                    } else {
+                       match repeating[idx] {
+                        Rep::None => (),
+                        Rep::Running(s) => repeating[idx] = Rep::Running(s+1),
+                        Rep::Done(_) => (),
+                    };
+                    }
+                    *node = left.clone()
+                }),
                 _ => panic!()
             };
             steps += 1;
@@ -90,6 +131,7 @@ fn part2(game: &mut Game) -> u64 {
                     done = false
                 }
             }
+            dbg!(&repeating);
         };
     }
 
