@@ -1,0 +1,51 @@
+use std::{cmp, collections::HashSet, fs};
+
+fn main() {
+    let input = fs::read_to_string("sample").unwrap();
+
+    let (available_str, patterns_str) = input.split_once("\n\n").unwrap();
+    
+    let mut available = HashSet::new();
+    
+    let mut largest = 0;
+    available_str.split(", ").for_each(|towel| {
+        available.insert(towel.to_owned());
+        largest = cmp::max(largest, towel.len());
+    });
+
+    let patterns: Vec<String> = patterns_str.lines().map(|s| s.to_owned()).collect();
+
+    dbg!(&available);
+    dbg!(&patterns);
+
+    part1(&available, &patterns, largest);
+
+}
+
+fn part1(available: &HashSet<String>, patterns: &Vec<String>, largest: usize) {
+    let passed: Vec<bool> = patterns.iter()
+        .map(|pat| find_possible(available, pat, largest, 0)).collect();
+
+
+    dbg!(&passed);
+    dbg!(passed.iter().filter(|p| p)
+        .count());
+
+}
+
+fn find_possible(available: &HashSet<String>, pattern: &str, largest: usize, start_idx: usize) -> bool {
+
+    if start_idx >= pattern.len() {
+        return true;
+    }
+
+    for end in (1..largest).rev() {
+        if available.contains(&pattern[start_idx..largest]) {
+            if find_possible(available, pattern, largest, start_idx+end) {
+                return true;
+            }
+        }
+    }
+    false
+
+}
